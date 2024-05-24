@@ -33,7 +33,17 @@ public class Gui extends JFrame {
   }
 
   public static void main(String[] args) {
+
+    long startTime = System.currentTimeMillis();
+
     PrecomputedMoveData.initialise();
     EventQueue.invokeLater(Gui::new);
+
+    // Your application's initialization code goes here
+
+    long endTime = System.currentTimeMillis();
+    long startupTime = endTime - startTime;
+
+    System.out.println("Application started in " + startupTime + "ms.");
   }
 }

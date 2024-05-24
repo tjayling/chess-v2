@@ -43,6 +43,23 @@ public class BitBoard {
     return new BitBoard(this.board | that);
   }
 
+  public static BitBoard from(long... boards) {
+    // using boring old for loop for real speed
+    long result = 0L;
+    for (long l : boards) {
+      result |= l;
+    }
+    return new BitBoard(result);
+  }
+
+  public static BitBoard from(BitBoard... boards) {
+    // using boring old for loop for real speed
+    BitBoard result = BitBoard.empty();
+    for (BitBoard l : boards) {
+      result = result.or(l);
+    }
+    return result;
+  }
 
   public BitBoard xor(BitBoard that) {
     return new BitBoard(this.board ^ that.getBoard());

@@ -5,15 +5,13 @@ import static com.tom.chess.movegen.precomputed.PrecomputedMoveData.FILE_H;
 import static com.tom.chess.movegen.precomputed.PrecomputedMoveData.RANK_1;
 import static com.tom.chess.movegen.precomputed.PrecomputedMoveData.RANK_8;
 
-import java.util.HashMap;
-import java.util.Map;
-
 public class KingDataGenerator {
-  public static void createKingsLookupTable() {
-    Map<Identifier, Long> lookup = new HashMap<>();
+  public static final long[] KING_MASKS;
+
+  static {
+    KING_MASKS = new long[64];
     for (int i = 0; i < 64; i++) {
-      long movementMask = createKingMovementMask(i);
-//      new BitBoard(movementMask).print();
+      KING_MASKS[i] = createKingMovementMask(i);
     }
   }
 
@@ -45,12 +43,14 @@ public class KingDataGenerator {
       kingMask &= ~RANK_1;
     }
     if (file == 0) {
-      kingMask &= ~FILE_A;
+      kingMask &= ~FILE_H;
     }
     if (file == 7) {
-      kingMask &= ~FILE_H;
+      kingMask &= ~FILE_A;
     }
 
     return kingMask;
   }
+
+  public static void initialise() {}
 }

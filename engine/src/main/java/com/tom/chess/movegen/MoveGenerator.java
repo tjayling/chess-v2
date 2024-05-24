@@ -2,6 +2,7 @@ package com.tom.chess.movegen;
 
 import static com.tom.chess.movegen.precomputed.BishopDataGenerator.BISHOP_LOOKUP;
 import static com.tom.chess.movegen.precomputed.BishopDataGenerator.BISHOP_MASKS;
+import static com.tom.chess.movegen.precomputed.KingDataGenerator.KING_MASKS;
 import static com.tom.chess.movegen.precomputed.KnightDataGenerator.KNIGHT_MASKS;
 import static com.tom.chess.movegen.precomputed.PawnDataGenerator.BLACK_PAWN_ATTACK_MASKS;
 import static com.tom.chess.movegen.precomputed.PawnDataGenerator.BLACK_PAWN_MASKS;
@@ -18,32 +19,42 @@ import static com.tom.chess.piece.PieceConstants.WHITE;
 
 import com.tom.chess.model.BitBoard;
 import com.tom.chess.model.GameState;
-import com.tom.chess.model.Move;
 import com.tom.chess.model.Moves;
 import com.tom.chess.movegen.precomputed.Identifier;
-import java.util.ArrayList;
-import java.util.List;
 
 public class MoveGenerator {
+  private final ThreatMapGenerator threatMapGenerator;
+
+  public MoveGenerator() {
+    threatMapGenerator = new ThreatMapGenerator();
+  }
 
   public Moves generateMoves(final GameState gameState) {
-    var taboo = generateTaboo(gameState);
+    var threatMap = threatMapGenerator.generateThreatMap(gameState);
+    var startTime = System.nanoTime();
+
+    var moves = getMoves(gameState);
+
+    var endTime = System.nanoTime();
+    long startupTime = endTime - startTime;
+
+    System.out.println("Moves generated in " + startupTime + "nanoseconds.");
+    return moves;
+  }
+
+  private Moves getMoves(GameState gameState) {
     Moves moves = new Moves();
     moves.addAll(getPawnMoves(gameState));
     moves.addAll(getKnightMoves(gameState));
     moves.addAll(getBishopMoves(gameState));
     moves.addAll(getRookMoves(gameState));
     moves.addAll(getQueenMoves(gameState));
+    moves.addAll(getKingMoves(gameState));
     return moves;
   }
 
-  private BitBoard generateTaboo(GameState gameState) {
-    return null;
-  }
-
-//  @SuppressWarnings("DuplicatedCode")
-  private List<Move> getPawnMoves(GameState gameState) {
-    List<Move> moves = new ArrayList<>();
+  private Moves getPawnMoves(GameState gameState) {
+    Moves moves = new Moves();
     var empty = gameState.getBitboards().getEmpty();
 
     switch (gameState.getFriendlyColour()) {
@@ -65,27 +76,25 @@ public class MoveGenerator {
     return moves;
   }
 
-  private List<Move> getPawnMoves(BitBoard empty, BitBoard friendlyPawns, BitBoard opponentPieces, long[] whitePawnMasks, long rank3, long[] whitePawnAttackMasks) {
-    List<Move> moves = new ArrayList<>();
+  private Moves getPawnMoves(BitBoard empty, BitBoard friendlyPawns, BitBoard opponentPieces, long[] friendlyPawnMasks, long rankMask, long[] friendlyAttackMasks) {
+    Moves moves = new Moves();
     for (int pawnPosition : friendlyPawns.getPositions()) {
-      var mask = whitePawnMasks[pawnPosition];
-      var m = empty.and(whitePawnMasks[pawnPosition]);
+      var mask = friendlyPawnMasks[pawnPosition];
+      var m = empty.and(friendlyPawnMasks[pawnPosition]);
 
-      // not sure which orifice this bit of logic came from, but it seems to work for filtering start moves
-      var normalMoves = m.xor(mask).and(rank3).hasPositions() ? BitBoard.empty() : m;
-      var attacks = opponentPieces.and(whitePawnAttackMasks[pawnPosition]);
+      // not sure which orifice this bit of logic came from, but it seems to work for calculating start moves
+      var normalMoves = m.xor(mask).and(rankMask).hasPositions() ? BitBoard.empty() : m;
+      var attacks = opponentPieces.and(friendlyAttackMasks[pawnPosition]);
 
-      var targetPositions = normalMoves.or(attacks).getPositions();
+      var targetsBitboard = normalMoves.or(attacks);
 
-      for (var targetPosition : targetPositions) {
-        moves.add(new Move(pawnPosition, targetPosition));
-      }
+      moves.addAll(Moves.from(pawnPosition, targetsBitboard));
     }
     return moves;
   }
 
-  private List<Move> getKnightMoves(GameState gameState) {
-    List<Move> moves = new ArrayList<>();
+  private Moves getKnightMoves(GameState gameState) {
+    Moves moves = new Moves();
 
     BitBoard knights = switch (gameState.getFriendlyColour()) {
       case WHITE -> gameState.getBitboards().getWhiteKnights();
@@ -94,17 +103,15 @@ public class MoveGenerator {
     };
 
     for (int knightPosition : knights.getPositions()) {
-      var targetPositions = gameState.getFriendlyBitBoard().not().and(KNIGHT_MASKS[knightPosition]);
+      var targetsBitboard = gameState.getFriendlyBitBoard().not().and(KNIGHT_MASKS[knightPosition]);
 
-      for (int targetPosition : targetPositions.getPositions()) {
-        moves.add(new Move(knightPosition, targetPosition));
-      }
+      moves.addAll(Moves.from(knightPosition, targetsBitboard));
     }
     return moves;
   }
 
-  private List<Move> getBishopMoves(GameState gameState) {
-    List<Move> moves = new ArrayList<>();
+  private Moves getBishopMoves(GameState gameState) {
+    Moves moves = new Moves();
 
     BitBoard bishops = switch (gameState.getFriendlyColour()) {
       case WHITE -> gameState.getBitboards().getWhiteBishops();
@@ -118,18 +125,15 @@ public class MoveGenerator {
       var bishopMask = BISHOP_MASKS[bishopPosition];
       var blockerMask = blockers.and(bishopMask).getBoard();
       var identifier = new Identifier(bishopPosition, blockerMask);
-      var validMoves = gameState.getFriendlyBitBoard().not().and(BISHOP_LOOKUP.get(identifier));
-      var targetPositions = validMoves.getPositions();
+      var targetsBitboard = gameState.getFriendlyBitBoard().not().and(BISHOP_LOOKUP.get(identifier));
 
-      for (var targetPosition : targetPositions) {
-        moves.add(new Move(bishopPosition, targetPosition));
-      }
+      moves.addAll(Moves.from(bishopPosition, targetsBitboard));
     }
     return moves;
   }
 
-  private List<Move> getRookMoves(GameState gameState) {
-    List<Move> moves = new ArrayList<>();
+  private Moves getRookMoves(GameState gameState) {
+    Moves moves = new Moves();
 
     BitBoard rooks = switch (gameState.getFriendlyColour()) {
       case WHITE -> gameState.getBitboards().getWhiteRooks();
@@ -143,18 +147,14 @@ public class MoveGenerator {
       var rookMask = ROOK_MASKS[rookPosition];
       var blockerMask = blockers.and(rookMask).getBoard();
       var identifier = new Identifier(rookPosition, blockerMask);
-      var validMoves = gameState.getFriendlyBitBoard().not().and(ROOK_LOOKUP.get(identifier));
-      var targetPositions = validMoves.getPositions();
-
-      for (var targetPosition : targetPositions) {
-        moves.add(new Move(rookPosition, targetPosition));
-      }
+      var targetsBitboard = gameState.getFriendlyBitBoard().not().and(ROOK_LOOKUP.get(identifier));
+      moves.addAll(Moves.from(rookPosition, targetsBitboard));
     }
     return moves;
   }
 
-  private List<Move> getQueenMoves(GameState gameState) {
-    List<Move> moves = new ArrayList<>();
+  private Moves getQueenMoves(GameState gameState) {
+    Moves moves = new Moves();
 
     BitBoard queens = switch (gameState.getFriendlyColour()) {
       case WHITE -> gameState.getBitboards().getWhiteQueens();
@@ -168,13 +168,17 @@ public class MoveGenerator {
       var queenMask = QUEEN_MASKS[queenPosition];
       var blockerMask = blockers.and(queenMask).getBoard();
       var identifier = new Identifier(queenPosition, blockerMask);
-      var validMoves = gameState.getFriendlyBitBoard().not().and(QUEEN_LOOKUP.get(identifier));
-      var targetPositions = validMoves.getPositions();
+      var targetsBitboard = gameState.getFriendlyBitBoard().not().and(QUEEN_LOOKUP.get(identifier));
 
-      for (var targetPosition : targetPositions) {
-        moves.add(new Move(queenPosition, targetPosition));
-      }
+      moves.addAll(Moves.from(queenPosition, targetsBitboard));
     }
     return moves;
+  }
+
+  private Moves getKingMoves(GameState gameState) {
+    int kingPosition = gameState.getFriendlyKingPosition();
+    var targetsBitboard = gameState.getFriendlyBitBoard().not().and(KING_MASKS[kingPosition]);
+
+    return Moves.from(kingPosition, targetsBitboard);
   }
 }

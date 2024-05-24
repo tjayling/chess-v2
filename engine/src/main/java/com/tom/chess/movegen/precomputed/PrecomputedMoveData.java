@@ -90,18 +90,12 @@ public class PrecomputedMoveData {
   }
 
   public static void initialise() {
-    var t = new Thread(() -> {
-      PawnDataGenerator.initialise();
-      KnightDataGenerator.initialise();
-      BishopDataGenerator.initialise();
-      RookDataGenerator.initialise();
-    });
-    t.start();
-    try {
-      t.join();
-      QueenDataGenerator.initialise();
-    } catch (InterruptedException e) {
-      throw new RuntimeException("Shit the threads have broken");
-    }
+    PawnDataGenerator.initialise();
+    KnightDataGenerator.initialise();
+    BishopDataGenerator.initialise();
+    RookDataGenerator.initialise();
+    KingDataGenerator.initialise();
+    // needs to be done last as depends on rook and bishop masks
+    QueenDataGenerator.initialise();
   }
 }

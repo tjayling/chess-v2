@@ -236,10 +236,18 @@ public class GameState {
     return newSquares;
   }
 
-  private int getFriendlyKingPosition() {
+  public int getFriendlyKingPosition() {
     return switch (fen.getFriendlyColour()) {
       case WHITE -> bitboards.getWhiteKing().getLastPosition();
       case BLACK -> bitboards.getBlackKing().getLastPosition();
+      default -> throw new RuntimeException("Error finding friendly king position");
+    };
+  }
+
+  public int getOpponentKingPosition() {
+    return switch (fen.getFriendlyColour()) {
+      case BLACK -> bitboards.getWhiteKing().getLastPosition();
+      case WHITE -> bitboards.getBlackKing().getLastPosition();
       default -> throw new RuntimeException("Error finding friendly king position");
     };
   }
