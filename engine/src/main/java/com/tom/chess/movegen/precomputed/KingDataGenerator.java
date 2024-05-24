@@ -5,7 +5,6 @@ import static com.tom.chess.movegen.precomputed.PrecomputedMoveData.FILE_H;
 import static com.tom.chess.movegen.precomputed.PrecomputedMoveData.RANK_1;
 import static com.tom.chess.movegen.precomputed.PrecomputedMoveData.RANK_8;
 
-import com.tom.chess.model.BitBoard;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -14,7 +13,7 @@ public class KingDataGenerator {
     Map<Identifier, Long> lookup = new HashMap<>();
     for (int i = 0; i < 64; i++) {
       long movementMask = createKingMovementMask(i);
-      new BitBoard(movementMask).print();
+//      new BitBoard(movementMask).print();
     }
   }
 

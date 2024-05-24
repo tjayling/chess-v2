@@ -1,7 +1,11 @@
 package com.tom.chess.util;
 
+import java.util.Arrays;
+import java.util.stream.Stream;
+
 public class ArrayUtil {
-  private ArrayUtil() {}
+  private ArrayUtil() {
+  }
 
   public static <T> T[] reverse(T[] array) {
     var a = array.clone();
@@ -11,5 +15,9 @@ public class ArrayUtil {
       a[a.length - 1 - i] = temp;
     }
     return a;
+  }
+
+  public static <T> T[] concat(T[] a, T[] b) {
+    return Stream.concat(Arrays.stream(a), Arrays.stream(b)).toArray(size -> Arrays.copyOf(a, size));
   }
 }

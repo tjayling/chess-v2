@@ -1,5 +1,6 @@
 package com.tom.chess.movegen.precomputed;
 
+import com.tom.chess.util.ArrayUtil;
 import com.tom.chess.util.Coord;
 import java.util.ArrayList;
 import java.util.List;
@@ -35,12 +36,14 @@ public class PrecomputedMoveData {
 
   public static final Coord[] ROOK_DIRECTIONS;
   public static final Coord[] BISHOP_DIRECTIONS;
+  public static final Coord[] QUEEN_DIRECTIONS;
 
   static {
     RANKS = new long[] {RANK_1, RANK_2, RANK_3, RANK_4, RANK_5, RANK_6, RANK_7, RANK_8};
     FILES = new long[] {FILE_A, FILE_B, FILE_C, FILE_D, FILE_E, FILE_F, FILE_G, FILE_H};
     ROOK_DIRECTIONS = new Coord[] {new Coord(1, 0), new Coord(0, 1), new Coord(-1, 0), new Coord(0, -1)};
     BISHOP_DIRECTIONS = new Coord[] {new Coord(1, 1), new Coord(1, -1), new Coord(-1, -1), new Coord(-1, 1)};
+    QUEEN_DIRECTIONS = ArrayUtil.concat(ROOK_DIRECTIONS, BISHOP_DIRECTIONS);
   }
 
   public static long[] calculateBlockers(long movementMask) {
@@ -87,12 +90,18 @@ public class PrecomputedMoveData {
   }
 
   public static void initialise() {
-    //    createBishopsLookupTable();
-    //    createKnightsLookupTable();
-    //    createRooksLookupTable();
-    //    createKingsLookupTable();
-    PawnDataGenerator.initialise();
-    BishopDataGenerator.initialise();
-    RookDataGenerator.initialise();
+    var t = new Thread(() -> {
+      PawnDataGenerator.initialise();
+      KnightDataGenerator.initialise();
+      BishopDataGenerator.initialise();
+      RookDataGenerator.initialise();
+    });
+    t.start();
+    try {
+      t.join();
+      QueenDataGenerator.initialise();
+    } catch (InterruptedException e) {
+      throw new RuntimeException("Shit the threads have broken");
+    }
   }
 }

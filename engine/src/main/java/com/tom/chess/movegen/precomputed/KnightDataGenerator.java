@@ -4,27 +4,16 @@ import static com.tom.chess.movegen.precomputed.PrecomputedMoveData.FILE_A_B;
 import static com.tom.chess.movegen.precomputed.PrecomputedMoveData.FILE_G_H;
 import static com.tom.chess.movegen.precomputed.PrecomputedMoveData.RANK_1_2;
 import static com.tom.chess.movegen.precomputed.PrecomputedMoveData.RANK_7_8;
-import static com.tom.chess.movegen.precomputed.PrecomputedMoveData.calculateBlockers;
-
-import com.tom.chess.model.BitBoard;
-import java.util.HashMap;
-import java.util.Map;
 
 public class KnightDataGenerator {
+  public static final long[] KNIGHT_MASKS;
 
-  public static Map<Identifier, Long> createKnightsLookupTable() {
-    Map<Identifier, Long> lookup = new HashMap<>();
+  static {
+    KNIGHT_MASKS = new long[64];
+
     for (int startSquare = 0; startSquare < 64; startSquare++) {
-      long movementMask = createKnightMovementMask(startSquare);
-      long[] blockerMasks = calculateBlockers(movementMask);
-      new BitBoard(movementMask).print();
-      for (var blockerMask : blockerMasks) {
-        var identifier = new Identifier(startSquare, blockerMask);
-//        var legalMoves =  calculateLegalMoves(startSquare, blockerMask);
-//        lookup.put(identifier, legalMoves);
-      }
+      KNIGHT_MASKS[startSquare] = createKnightMovementMask(startSquare);
     }
-    return lookup;
   }
 
   private static long createKnightMovementMask(int startSquare) {
@@ -57,15 +46,15 @@ public class KnightDataGenerator {
     }
 
     if (file == 0 || file == 1) {
-      knightMask &= ~FILE_A_B;
+      knightMask &= ~FILE_G_H;
     }
 
     if (file == 6 || file == 7) {
-      knightMask &= ~FILE_G_H;
+      knightMask &= ~FILE_A_B;
     }
 
     return knightMask;
   }
 
-  public static void initialize() {}
+  public static void initialise() {}
 }

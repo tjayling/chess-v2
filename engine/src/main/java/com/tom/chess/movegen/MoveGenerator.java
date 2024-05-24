@@ -2,12 +2,15 @@ package com.tom.chess.movegen;
 
 import static com.tom.chess.movegen.precomputed.BishopDataGenerator.BISHOP_LOOKUP;
 import static com.tom.chess.movegen.precomputed.BishopDataGenerator.BISHOP_MASKS;
+import static com.tom.chess.movegen.precomputed.KnightDataGenerator.KNIGHT_MASKS;
 import static com.tom.chess.movegen.precomputed.PawnDataGenerator.BLACK_PAWN_ATTACK_MASKS;
 import static com.tom.chess.movegen.precomputed.PawnDataGenerator.BLACK_PAWN_MASKS;
 import static com.tom.chess.movegen.precomputed.PawnDataGenerator.WHITE_PAWN_ATTACK_MASKS;
 import static com.tom.chess.movegen.precomputed.PawnDataGenerator.WHITE_PAWN_MASKS;
 import static com.tom.chess.movegen.precomputed.PrecomputedMoveData.RANK_3;
 import static com.tom.chess.movegen.precomputed.PrecomputedMoveData.RANK_6;
+import static com.tom.chess.movegen.precomputed.QueenDataGenerator.QUEEN_LOOKUP;
+import static com.tom.chess.movegen.precomputed.QueenDataGenerator.QUEEN_MASKS;
 import static com.tom.chess.movegen.precomputed.RookDataGenerator.ROOK_LOOKUP;
 import static com.tom.chess.movegen.precomputed.RookDataGenerator.ROOK_MASKS;
 import static com.tom.chess.piece.PieceConstants.BLACK;
@@ -27,8 +30,10 @@ public class MoveGenerator {
     var taboo = generateTaboo(gameState);
     Moves moves = new Moves();
     moves.addAll(getPawnMoves(gameState));
+    moves.addAll(getKnightMoves(gameState));
     moves.addAll(getBishopMoves(gameState));
     moves.addAll(getRookMoves(gameState));
+    moves.addAll(getQueenMoves(gameState));
     return moves;
   }
 
@@ -79,6 +84,25 @@ public class MoveGenerator {
     return moves;
   }
 
+  private List<Move> getKnightMoves(GameState gameState) {
+    List<Move> moves = new ArrayList<>();
+
+    BitBoard knights = switch (gameState.getFriendlyColour()) {
+      case WHITE -> gameState.getBitboards().getWhiteKnights();
+      case BLACK -> gameState.getBitboards().getBlackKnights();
+      default -> throw new IllegalStateException("Unexpected value: %S".formatted(gameState.getFriendlyColour()));
+    };
+
+    for (int knightPosition : knights.getPositions()) {
+      var targetPositions = gameState.getFriendlyBitBoard().not().and(KNIGHT_MASKS[knightPosition]);
+
+      for (int targetPosition : targetPositions.getPositions()) {
+        moves.add(new Move(knightPosition, targetPosition));
+      }
+    }
+    return moves;
+  }
+
   private List<Move> getBishopMoves(GameState gameState) {
     List<Move> moves = new ArrayList<>();
 
@@ -90,22 +114,11 @@ public class MoveGenerator {
 
     BitBoard blockers = gameState.getBitboards().getEmpty().not();
 
-    System.out.println("BISHOPS");
-    bishops.print();
-
     for (int bishopPosition : bishops.getPositions()) {
       var bishopMask = BISHOP_MASKS[bishopPosition];
       var blockerMask = blockers.and(bishopMask).getBoard();
-
       var identifier = new Identifier(bishopPosition, blockerMask);
-
       var validMoves = gameState.getFriendlyBitBoard().not().and(BISHOP_LOOKUP.get(identifier));
-
-      System.out.println("Valid Moves");
-      validMoves.print();
-      System.out.println("Bishop Mask");
-      new BitBoard(bishopMask).print();
-
       var targetPositions = validMoves.getPositions();
 
       for (var targetPosition : targetPositions) {
@@ -129,15 +142,37 @@ public class MoveGenerator {
     for (int rookPosition : rooks.getPositions()) {
       var rookMask = ROOK_MASKS[rookPosition];
       var blockerMask = blockers.and(rookMask).getBoard();
-
       var identifier = new Identifier(rookPosition, blockerMask);
-
       var validMoves = gameState.getFriendlyBitBoard().not().and(ROOK_LOOKUP.get(identifier));
-
       var targetPositions = validMoves.getPositions();
 
       for (var targetPosition : targetPositions) {
         moves.add(new Move(rookPosition, targetPosition));
+      }
+    }
+    return moves;
+  }
+
+  private List<Move> getQueenMoves(GameState gameState) {
+    List<Move> moves = new ArrayList<>();
+
+    BitBoard queens = switch (gameState.getFriendlyColour()) {
+      case WHITE -> gameState.getBitboards().getWhiteQueens();
+      case BLACK -> gameState.getBitboards().getBlackQueens();
+      default -> throw new IllegalStateException("Unexpected value: %S".formatted(gameState.getFriendlyColour()));
+    };
+
+    BitBoard blockers = gameState.getBitboards().getEmpty().not();
+
+    for (int queenPosition : queens.getPositions()) {
+      var queenMask = QUEEN_MASKS[queenPosition];
+      var blockerMask = blockers.and(queenMask).getBoard();
+      var identifier = new Identifier(queenPosition, blockerMask);
+      var validMoves = gameState.getFriendlyBitBoard().not().and(QUEEN_LOOKUP.get(identifier));
+      var targetPositions = validMoves.getPositions();
+
+      for (var targetPosition : targetPositions) {
+        moves.add(new Move(queenPosition, targetPosition));
       }
     }
     return moves;

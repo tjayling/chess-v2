@@ -15,7 +15,7 @@ import lombok.Getter;
 @Getter
 public class Fen {
 //  private static final String STARTING_POSITION = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
-  private static final String STARTING_POSITION = "rbBRrrrr/pp4pp/8/8/b7/7b/PP4PP/R5RR w KQkq - 0 1";
+  private static final String STARTING_POSITION = "rbBRrrrr/pp3npp/8/3Q4/b7/5nNb/PP4PP/R5RR w KQkq - 0 1";
 
   private final String fenString;
   private final int[] squares;

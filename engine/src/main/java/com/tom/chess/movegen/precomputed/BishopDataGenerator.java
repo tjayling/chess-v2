@@ -31,28 +31,28 @@ public class BishopDataGenerator {
     int file = startSquare % 8;
 
     // make top left line
-    var topLeftShortest = Math.min(8 - rank, 8 - file);
+    var topLeftShortest = Math.min(7 - rank, 7 - file);
     for (int j = 0; j < topLeftShortest; j++) {
       var pos = (rank + j) * 8 + (file + j);
       bishopMask |= 1L << pos;
     }
 
     // make top right line
-    var topRightShortest = Math.min(8 - rank, file + 1);
+    var topRightShortest = Math.min(7 - rank, file);
     for (int j = 0; j < topRightShortest; j++) {
       var pos = (rank + j) * 8 + (file - j);
       bishopMask |= 1L << pos;
     }
 
     // make bottom left shortest
-    var bottomLeftShortest = Math.min(rank + 1, 8 - file);
+    var bottomLeftShortest = Math.min(rank, 7 - file);
     for (int j = 0; j < bottomLeftShortest; j++) {
       var pos = (rank - j) * 8 + (file + j);
       bishopMask |= 1L << pos;
     }
 
     // make bottom right shortest
-    var bottomRightShortest = Math.min(rank + 1, file + 1);
+    var bottomRightShortest = Math.min(rank, file);
     for (int j = 0; j < bottomRightShortest; j++) {
       var pos = (rank - j) * 8 + (file - j);
       bishopMask |= 1L << pos;
@@ -60,6 +60,8 @@ public class BishopDataGenerator {
 
     // remove current position
     bishopMask &= ~(1L << startSquare);
+    //remove edges
+//    bishopMask &= (~RANK_1 & ~RANK_8 & ~FILE_A & ~FILE_H);
     return bishopMask;
   }
 
