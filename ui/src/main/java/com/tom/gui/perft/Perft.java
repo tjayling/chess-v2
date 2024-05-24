@@ -31,13 +31,13 @@ public class Perft {
         if (depth == 1) {
             int possibleMoves = moves.size();
             if (targetDepth == 2) {
-                String moveString = String.format("%s: %s", previousMove, possibleMoves);
+                String moveString = String.format("%s: %s", previousMove.getMove(), possibleMoves);
                 output(moveString, controller);
                 return possibleMoves;
             }
             if (targetDepth == 1) {
                 for (Move move : moves) {
-                    String moveString = String.format("%s: %s", move, 1);
+                    String moveString = String.format("%s: %s", move.getMove(), 1);
                     output(moveString, controller);
                 }
             }
@@ -51,7 +51,7 @@ public class Perft {
             mediator.undoMove();
         }
         if (depth == targetDepth - 1) {
-            String moveString = String.format("%s: %s", previousMove, possibleMoves);
+            String moveString = String.format("%s: %s", previousMove.getMove(), possibleMoves);
             output(moveString, controller);
         }
 
