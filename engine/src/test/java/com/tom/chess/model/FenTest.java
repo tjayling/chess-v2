@@ -24,6 +24,7 @@ class FenTest {
 
   @Test
   void squaresFromDefaultRookString() {
+    var input = "rrrRrrrr/8/8/8/8/8/8/R5RR w KQkq - 0 1";
     var expected =
         new int[] {
             21, 0, 0, 0, 0, 0, 21, 21,
@@ -34,7 +35,7 @@ class FenTest {
             0, 0, 0, 0, 0, 0, 0, 0,
             0, 0, 0, 0, 0, 0, 0, 0,
             37, 37, 37, 21, 37, 37, 37, 37};
-    var actual = Fen.defaultFen().getSquares();
+    var actual = Fen.fromFen(input).getSquares();
     assertArrayEquals(expected, actual);
   }
 

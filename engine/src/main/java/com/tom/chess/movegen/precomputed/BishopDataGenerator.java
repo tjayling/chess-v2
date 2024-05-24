@@ -1,15 +1,27 @@
 package com.tom.chess.movegen.precomputed;
 
-import com.tom.chess.model.BitBoard;
+import static com.tom.chess.movegen.precomputed.PrecomputedMoveData.BISHOP_DIRECTIONS;
+
 import java.util.HashMap;
 import java.util.Map;
 
 public class BishopDataGenerator {
-  public static void createBishopsLookupTable() {
-    Map<Identifier, Long> lookup = new HashMap<>();
+  public static final long[] BISHOP_MASKS;
+  public static final Map<Identifier, Long> BISHOP_LOOKUP;
+
+  static {
+    BISHOP_MASKS = new long[64];
+    BISHOP_LOOKUP = new HashMap<>();
     for (int i = 0; i < 64; i++) {
       long movementMask = createBishopMovementMask(i);
-      new BitBoard(movementMask).print();
+      long[] blockers = PrecomputedMoveData.calculateBlockers(movementMask);
+      for (long blocker : blockers) {
+        var identifier = new Identifier(i, blocker);
+        var legalMoves = PrecomputedMoveData.calculateLegalMoves(i, blocker, BISHOP_DIRECTIONS);
+
+        BISHOP_LOOKUP.put(identifier, legalMoves);
+      }
+      BISHOP_MASKS[i] = movementMask;
     }
   }
 
@@ -50,4 +62,6 @@ public class BishopDataGenerator {
     bishopMask &= ~(1L << startSquare);
     return bishopMask;
   }
+
+  public static void initialise() {}
 }

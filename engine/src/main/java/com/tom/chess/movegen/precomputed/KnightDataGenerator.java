@@ -5,7 +5,6 @@ import static com.tom.chess.movegen.precomputed.PrecomputedMoveData.FILE_G_H;
 import static com.tom.chess.movegen.precomputed.PrecomputedMoveData.RANK_1_2;
 import static com.tom.chess.movegen.precomputed.PrecomputedMoveData.RANK_7_8;
 import static com.tom.chess.movegen.precomputed.PrecomputedMoveData.calculateBlockers;
-import static com.tom.chess.movegen.precomputed.PrecomputedMoveData.calculateLegalMoves;
 
 import com.tom.chess.model.BitBoard;
 import java.util.HashMap;
@@ -67,4 +66,6 @@ public class KnightDataGenerator {
 
     return knightMask;
   }
+
+  public static void initialize() {}
 }

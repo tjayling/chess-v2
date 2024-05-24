@@ -5,6 +5,7 @@ import static com.tom.commandline.AnsiConstants.ANSI_RED_BACKGROUND;
 import static com.tom.commandline.AnsiConstants.ANSI_RESET;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import lombok.Getter;
@@ -22,31 +23,6 @@ public class BitBoard {
     return new BitBoard(0L);
   }
 
-  public void print() {
-    var result = new StringBuilder();
-    var input = new StringBuilder(Long.toBinaryString(board));
-    while (input.length() < LENGTH) {
-      input.insert(0, '0');
-    }
-
-    for (int i = 0; i < 8; i++) {
-      List<String> line = new ArrayList<>();
-      for (char c : input.substring(i * 8, i * 8 + 8).toCharArray()) {
-        if (c == '1') {
-          line.add("%s %s %s".formatted(ANSI_GREEN_BACKGROUND, c, ANSI_RESET));
-        } else {
-          line.add("%s %s %s".formatted(ANSI_RED_BACKGROUND, c, ANSI_RESET));
-        }
-      }
-      for (String s : line) {
-        result.append(s);
-      }
-      result.append('\n');
-    }
-    System.out.println(result);
-    System.out.println(input);
-  }
-
   public BitBoard addBitAtIndex(int index) {
     return new BitBoard(board | (1L << index));
   }
@@ -54,6 +30,7 @@ public class BitBoard {
   public BitBoard and(BitBoard that) {
     return new BitBoard(this.board & that.getBoard());
   }
+
   public BitBoard and(long that) {
     return new BitBoard(this.board & that);
   }
@@ -64,6 +41,15 @@ public class BitBoard {
 
   public BitBoard or(long that) {
     return new BitBoard(this.board | that);
+  }
+
+
+  public BitBoard xor(BitBoard that) {
+    return new BitBoard(this.board ^ that.getBoard());
+  }
+
+  public BitBoard xor(long that) {
+    return new BitBoard(this.board ^ that);
   }
 
   public BitBoard not() {
@@ -77,7 +63,7 @@ public class BitBoard {
   public List<Integer> getPositions() {
     List<Integer> result = new ArrayList<>();
     for (int i = 0; i < 64; i++) {
-      if (((board >>> i) & 1) == 1) {
+      if (((board >>> i) & 1L) == 1) {
         result.add(i);
       }
     }
@@ -109,6 +95,32 @@ public class BitBoard {
     return prevBitBoard;
   }
 
+  public void print() {
+    var result = new StringBuilder();
+    var input = new StringBuilder(Long.toBinaryString(board));
+    while (input.length() < LENGTH) {
+      input.insert(0, '0');
+    }
+
+    for (int i = 0; i < 8; i++) {
+      List<String> line = new ArrayList<>();
+      for (char c : input.substring(i * 8, i * 8 + 8).toCharArray()) {
+        if (c == '1') {
+          line.add("%s %s %s".formatted(ANSI_GREEN_BACKGROUND, c, ANSI_RESET));
+        } else {
+          line.add("%s %s %s".formatted(ANSI_RED_BACKGROUND, c, ANSI_RESET));
+        }
+      }
+      Collections.reverse(line);
+      for (String s : line) {
+        result.append(s);
+      }
+      result.append('\n');
+    }
+    System.out.println(result);
+    System.out.println(input);
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) {return true;}
@@ -117,8 +129,16 @@ public class BitBoard {
     return Objects.equals(board, bitBoard.board);
   }
 
+  public boolean equals(Long o) {
+    return this.board.equals(o);
+  }
+
   @Override
   public int hashCode() {
     return Objects.hashCode(board);
+  }
+
+  public boolean hasPositions() {
+    return this.board != 0;
   }
 }

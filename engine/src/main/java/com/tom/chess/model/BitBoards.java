@@ -48,36 +48,16 @@ public class BitBoards {
     this.blackPieces = BitBoard.orAll(blackPawns, blackKnights, blackBishops, blackRooks, blackQueens, blackKing);
 
     this.empty = BitBoard.orAll(whitePieces, blackPieces).not();
-
-//    stream().forEach(BitBoard::print);
   }
-//  public BitBoards(BitBoard empty, BitBoard white, BitBoard whitePawns, BitBoard whiteKnights, BitBoard whiteBishops, BitBoard whiteRooks, BitBoard whiteQueens, BitBoard whiteKing, BitBoard black,
-//      BitBoard blackPawns, BitBoard blackKnights, BitBoard blackBishops, BitBoard blackRooks, BitBoard blackQueens, BitBoard blackKing) {
-//    this.empty = empty;
-//    this.white = white;
-//    this.whitePawns = whitePawns;
-//    this.whiteKnights = whiteKnights;
-//    this.whiteBishops = whiteBishops;
-//    this.whiteRooks = whiteRooks;
-//    this.whiteQueens = whiteQueens;
-//    this.whiteKing = whiteKing;
-//    this.black = black;
-//    this.blackPawns = blackPawns;
-//    this.blackKnights = blackKnights;
-//    this.blackBishops = blackBishops;
-//    this.blackRooks = blackRooks;
-//    this.blackQueens = blackQueens;
-//    this.blackKing = blackKing;
-//  }
 
   public List<BitBoard> asList() {
-    return List.of(empty, whitePieces, whitePawns, whiteKnights, whiteBishops, whiteRooks, whiteQueens, whiteKing, blackPieces, blackPawns, blackKnights, blackBishops, blackRooks, blackQueens, blackKing);
+    return List.of(empty, whitePieces, whitePawns, whiteKnights, whiteBishops, whiteRooks, whiteQueens, whiteKing, blackPieces, blackPawns, blackKnights, blackBishops, blackRooks, blackQueens,
+        blackKing);
   }
 
   public Stream<BitBoard> stream() {
     return asList().stream();
   }
-
 
   private BitBoard generateWhitePawnsBitBoard(String fenString) {
     return generateBitBoardFromFen(fenString, 'P');
@@ -127,7 +107,13 @@ public class BitBoards {
     return generateBitBoardFromFen(fenString, 'k');
   }
 
-  private BitBoard generateBitBoardFromFen(String fenString, char piece) {
-    return BitBoard.parse(fenString.split("\\s+")[0].replaceAll(String.valueOf(piece), "1").replaceAll("[^1]", "0"));
+  private BitBoard generateBitBoardFromFen(String inputString, char piece) {
+    inputString = inputString.split("\\s+")[0];
+    var fenString = new StringBuilder();
+    for (int i = 0; i < 8; i++) {
+      fenString.insert(0, inputString.substring(i * 8, (i * 8) + 8));
+    }
+    fenString.reverse();
+    return BitBoard.parse(fenString.toString().replaceAll(String.valueOf(piece), "1").replaceAll("[^1]", "0"));
   }
 }
