@@ -12,20 +12,32 @@ import static com.tom.chess.piece.PieceConstants.WHITE;
 import static java.lang.Math.floor;
 
 import com.tom.chess.piece.PieceUtil;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.Data;
 
 @Data
 public class GameState {
   private Fen fen;
   private BitBoards bitboards;
-  private String fenBoard;
   private int friendlyKingPosition;
+
+  private BitBoard threatMap;
+  private BitBoard pinMask;
+  private boolean check;
+  // todo: following to may not be needed... to review
+  private List<Integer> checkingPieceTypes;
+  private BitBoard checkingPieces;
 
   public GameState(Fen fen) {
     this.fen = fen;
-    this.fenBoard = fen.getFenBoardString();
     this.bitboards = new BitBoards(fen);
     this.friendlyKingPosition = getFriendlyKingPosition();
+
+    this.pinMask = BitBoard.empty();
+    this.check = false;
+    this.checkingPieceTypes = new ArrayList<>();
+    this.checkingPieces = BitBoard.empty();
   }
 
   public GameState move(Move move) {
@@ -262,5 +274,9 @@ public class GameState {
       case BLACK -> bitboards.getBlackPieces();
       default -> throw new IllegalStateException("Unexpected value: %s".formatted(fen.getFriendlyColour()));
     };
+  }
+
+  public void addCheckingPieceType(int pieceType) {
+    this.checkingPieceTypes.add(pieceType);
   }
 }

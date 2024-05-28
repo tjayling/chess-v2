@@ -24,4 +24,24 @@ class BitBoardTest {
     assertEquals(expected, actual);
   }
 
+  @Test
+  void testAddBitAtIndex1() {
+    var input = 2;
+    var expected = BitBoard.from(0b100L);
+    var actual = BitBoard.empty().addBitAtIndex(input);
+
+    assertEquals(expected, actual);
+  }
+
+  @Test
+  void testAddBitAtIndex2() {
+    var input = 63;
+    var expected = BitBoard.from(0b1000000000000000000000000000000000000000000000000000000000000000L);
+    var actual = BitBoard.empty().addBitAtIndex(input);
+
+    expected.print();
+    actual.print();
+
+    assertEquals(expected, actual);
+  }
 }

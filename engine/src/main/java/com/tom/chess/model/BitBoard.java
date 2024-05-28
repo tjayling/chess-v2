@@ -88,7 +88,7 @@ public class BitBoard {
   }
 
   // static methods
-  public static BitBoard fromIndex(int i) {
+  public static BitBoard fromPosition(int i) {
     return BitBoard.empty().addBitAtIndex(i);
   }
 

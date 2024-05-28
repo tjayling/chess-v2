@@ -29,16 +29,15 @@ public class MoveGenerator {
     threatMapGenerator = new ThreatMapGenerator();
   }
 
-  public Moves generateMoves(final GameState gameState) {
-    var threatMap = threatMapGenerator.generateThreatMap(gameState);
-    var startTime = System.nanoTime();
-
+  public Moves generateMoves(GameState gameState) {
+    threatMapGenerator.generateThreatMapAndChecks(gameState);
+    //    var startTime = System.nanoTime();
     var moves = getMoves(gameState);
 
-    var endTime = System.nanoTime();
-    long startupTime = endTime - startTime;
-
-    System.out.println("Moves generated in " + startupTime + "nanoseconds.");
+    //    var endTime = System.nanoTime();
+    //    long startupTime = endTime - startTime;
+    //
+    //    System.out.println("Moves generated in " + startupTime + "nanoseconds.");
     return moves;
   }
 
@@ -56,40 +55,44 @@ public class MoveGenerator {
   private Moves getPawnMoves(GameState gameState) {
     Moves moves = new Moves();
     var empty = gameState.getBitboards().getEmpty();
+    BitBoard opponentPieces;
+    BitBoard friendlyPawns;
+    long[] friendlyPawnMasks;
+    long[] friendlyAttackMasks;
+    long rankMask;
 
     switch (gameState.getFriendlyColour()) {
       case WHITE -> {
-        var friendlyPawns = gameState.getBitboards().getWhitePawns();
-        var opponentPieces = gameState.getBitboards().getBlackPieces();
-
-        moves.addAll(getPawnMoves(empty, friendlyPawns, opponentPieces, WHITE_PAWN_MASKS, RANK_3, WHITE_PAWN_ATTACK_MASKS));
+        friendlyPawns = gameState.getBitboards().getWhitePawns();
+        opponentPieces = gameState.getBitboards().getBlackPieces();
+        friendlyPawnMasks = WHITE_PAWN_MASKS;
+        rankMask = RANK_3;
+        friendlyAttackMasks = WHITE_PAWN_ATTACK_MASKS;
       }
       case BLACK -> {
-        var friendlyPawns = gameState.getBitboards().getBlackPawns();
-        var opponentPieces = gameState.getBitboards().getWhitePieces();
-
-        moves.addAll(getPawnMoves(empty, friendlyPawns, opponentPieces, BLACK_PAWN_MASKS, RANK_6, BLACK_PAWN_ATTACK_MASKS));
+        friendlyPawns = gameState.getBitboards().getBlackPawns();
+        opponentPieces = gameState.getBitboards().getWhitePieces();
+        friendlyPawnMasks = BLACK_PAWN_MASKS;
+        rankMask = RANK_6;
+        friendlyAttackMasks = BLACK_PAWN_ATTACK_MASKS;
       }
       default -> throw new IllegalStateException("Unexpected value: %S".formatted(gameState.getFriendlyColour()));
     }
 
-    return moves;
-  }
-
-  private Moves getPawnMoves(BitBoard empty, BitBoard friendlyPawns, BitBoard opponentPieces, long[] friendlyPawnMasks, long rankMask, long[] friendlyAttackMasks) {
-    Moves moves = new Moves();
-    for (int pawnPosition : friendlyPawns.getPositions()) {
-      var mask = friendlyPawnMasks[pawnPosition];
-      var m = empty.and(friendlyPawnMasks[pawnPosition]);
+    for (int position : friendlyPawns.getPositions()) {
+      var mask = friendlyPawnMasks[position];
+      var m = empty.and(friendlyPawnMasks[position]);
 
       // not sure which orifice this bit of logic came from, but it seems to work for calculating start moves
       var normalMoves = m.xor(mask).and(rankMask).hasPositions() ? BitBoard.empty() : m;
-      var attacks = opponentPieces.and(friendlyAttackMasks[pawnPosition]);
+      var attacks = opponentPieces.and(friendlyAttackMasks[position]);
 
       var targetsBitboard = normalMoves.or(attacks);
+      targetsBitboard = targetsBitboard.and(gameState.getPinMask());
 
-      moves.addAll(Moves.from(pawnPosition, targetsBitboard));
+      moves.addAll(Moves.from(position, targetsBitboard));
     }
+
     return moves;
   }
 
@@ -102,10 +105,10 @@ public class MoveGenerator {
       default -> throw new IllegalStateException("Unexpected value: %S".formatted(gameState.getFriendlyColour()));
     };
 
-    for (int knightPosition : knights.getPositions()) {
-      var targetsBitboard = gameState.getFriendlyBitBoard().not().and(KNIGHT_MASKS[knightPosition]);
-
-      moves.addAll(Moves.from(knightPosition, targetsBitboard));
+    for (int position : knights.getPositions()) {
+      var targetsBitboard = gameState.getFriendlyBitBoard().not().and(KNIGHT_MASKS[position]);
+      targetsBitboard = targetsBitboard.and(gameState.getPinMask());
+      moves.addAll(Moves.from(position, targetsBitboard));
     }
     return moves;
   }
@@ -121,13 +124,14 @@ public class MoveGenerator {
 
     BitBoard blockers = gameState.getBitboards().getEmpty().not();
 
-    for (int bishopPosition : bishops.getPositions()) {
-      var bishopMask = BISHOP_MASKS[bishopPosition];
+    for (int position : bishops.getPositions()) {
+      var bishopMask = BISHOP_MASKS[position];
       var blockerMask = blockers.and(bishopMask).getBoard();
-      var identifier = new Identifier(bishopPosition, blockerMask);
-      var targetsBitboard = gameState.getFriendlyBitBoard().not().and(BISHOP_LOOKUP.get(identifier));
+      var identifier = new Identifier(position, blockerMask);
 
-      moves.addAll(Moves.from(bishopPosition, targetsBitboard));
+      var targetsBitboard = gameState.getFriendlyBitBoard().not().and(BISHOP_LOOKUP.get(identifier));
+      targetsBitboard = targetsBitboard.and(gameState.getPinMask());
+      moves.addAll(Moves.from(position, targetsBitboard));
     }
     return moves;
   }
@@ -143,12 +147,14 @@ public class MoveGenerator {
 
     BitBoard blockers = gameState.getBitboards().getEmpty().not();
 
-    for (int rookPosition : rooks.getPositions()) {
-      var rookMask = ROOK_MASKS[rookPosition];
+    for (int position : rooks.getPositions()) {
+      var rookMask = ROOK_MASKS[position];
       var blockerMask = blockers.and(rookMask).getBoard();
-      var identifier = new Identifier(rookPosition, blockerMask);
+      var identifier = new Identifier(position, blockerMask);
+
       var targetsBitboard = gameState.getFriendlyBitBoard().not().and(ROOK_LOOKUP.get(identifier));
-      moves.addAll(Moves.from(rookPosition, targetsBitboard));
+      targetsBitboard = targetsBitboard.and(gameState.getPinMask());
+      moves.addAll(Moves.from(position, targetsBitboard));
     }
     return moves;
   }
@@ -168,8 +174,9 @@ public class MoveGenerator {
       var queenMask = QUEEN_MASKS[queenPosition];
       var blockerMask = blockers.and(queenMask).getBoard();
       var identifier = new Identifier(queenPosition, blockerMask);
-      var targetsBitboard = gameState.getFriendlyBitBoard().not().and(QUEEN_LOOKUP.get(identifier));
 
+      var targetsBitboard = gameState.getFriendlyBitBoard().not().and(QUEEN_LOOKUP.get(identifier));
+      targetsBitboard = targetsBitboard.and(gameState.getPinMask());
       moves.addAll(Moves.from(queenPosition, targetsBitboard));
     }
     return moves;
@@ -177,8 +184,13 @@ public class MoveGenerator {
 
   private Moves getKingMoves(GameState gameState) {
     int kingPosition = gameState.getFriendlyKingPosition();
+    var threatMap = gameState.getThreatMap();
     var targetsBitboard = gameState.getFriendlyBitBoard().not().and(KING_MASKS[kingPosition]);
 
-    return Moves.from(kingPosition, targetsBitboard);
+    // mask out threat map
+    var legalTargets = threatMap.not().and(targetsBitboard);
+    legalTargets = legalTargets.and(gameState.getPinMask());
+
+    return Moves.from(kingPosition, legalTargets);
   }
 }

@@ -1,7 +1,5 @@
 package com.tom.chess.util;
 
-import java.util.function.Function;
-
 public class Coord extends Tuple<Integer, Integer> {
   public Coord(Integer x, Integer y) {
     super(x, y);
@@ -35,5 +33,11 @@ public class Coord extends Tuple<Integer, Integer> {
 
   public int getY() {
     return super.getB();
+  }
+
+  public static Coord fromPosition(int pos) {
+    int x = pos % 8;
+    int y = Math.floorDivExact(pos, 8);
+    return new Coord(x, y);
   }
 }
