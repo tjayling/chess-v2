@@ -9,7 +9,7 @@ class BitBoardTest {
   @Test
   void testGetPosition1() {
     var board = 0b1;
-    var bb = new BitBoard(board);
+    var bb = BitBoard.from(board);
     var expected = List.of(0);
     var actual = bb.getPositions();
     assertEquals(expected, actual);
@@ -18,7 +18,7 @@ class BitBoardTest {
   @Test
   void testGetPosition2() {
     var board = 0b1000000000000000000000000000000000000000000000000000000000000000L;
-    var bb = new BitBoard(board);
+    var bb = BitBoard.from(board);
     var expected = List.of(63);
     var actual = bb.getPositions();
     assertEquals(expected, actual);

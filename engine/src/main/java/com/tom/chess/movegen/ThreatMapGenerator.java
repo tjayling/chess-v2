@@ -24,19 +24,22 @@ import com.tom.chess.movegen.precomputed.Identifier;
 import com.tom.chess.util.Coord;
 
 public class ThreatMapGenerator {
-  // @formatter:off
-  public void generateThreatMapAndChecks(final GameState gameState) {
-    gameState.setThreatMap(
-        BitBoard.from(getPawnThreatMap(gameState),
-            getKnightThreatMap(gameState),
-            getBishopThreatMap(gameState),
-            getRookThreatMap(gameState),
-            getQueenThreatMap(gameState),
-            getKingThreatMap(gameState)
-        )
-    );
-    generatePinMask(gameState);
+  public GameState generateThreatMapAndChecks(GameState gameState) {
+    var threatMap = generateThreatMap(gameState);
+    var pinMask = generatePinMask(gameState);
+
+    return new GameState(gameState, threatMap, pinMask);
   }
+
+  // @formatter:off
+  private BitBoard generateThreatMap(GameState gameState) {
+    return BitBoard.from(getPawnThreatMap(gameState),
+        getKnightThreatMap(gameState),
+        getBishopThreatMap(gameState),
+        getRookThreatMap(gameState),
+        getQueenThreatMap(gameState),
+        getKingThreatMap(gameState)
+    );}
   // @formatter:on
 
   private BitBoard getPawnThreatMap(GameState gameState) {
@@ -159,7 +162,7 @@ public class ThreatMapGenerator {
   }
 
   private BitBoard getKingThreatMap(GameState gameState) {
-    return new BitBoard(KING_MASKS[gameState.getOpponentKingPosition()]);
+    return BitBoard.from(KING_MASKS[gameState.getOpponentKingPosition()]);
   }
 
   private void checkForCheck(GameState gameState, BitBoard threatMap, BitBoard attacker, int pieceType) {
@@ -171,7 +174,7 @@ public class ThreatMapGenerator {
     }
   }
 
-  private void generatePinMask(GameState gameState) {
+  private BitBoard generatePinMask(GameState gameState) {
     var friendlyKingPosition = gameState.getFriendlyKingPosition();
     var kingRays = QUEEN_MASKS[friendlyKingPosition];
 
@@ -196,7 +199,7 @@ public class ThreatMapGenerator {
 
     result = result.or(gameState.getCheckingPieces());
 
-    gameState.setPinMask(result);
+    return result;
   }
 
   private BitBoard drawLine(Coord start, Coord end) {

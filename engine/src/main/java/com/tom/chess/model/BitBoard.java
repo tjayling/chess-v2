@@ -1,10 +1,12 @@
 package com.tom.chess.model;
 
+import static com.tom.chess.model.StaticData.SQUARE_MAP;
 import static com.tom.commandline.AnsiConstants.ANSI_GREEN_BACKGROUND;
 import static com.tom.commandline.AnsiConstants.ANSI_RED_BACKGROUND;
 import static com.tom.commandline.AnsiConstants.ANSI_RESET;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
@@ -15,7 +17,7 @@ public class BitBoard {
   private static final int LENGTH = 64;
   private final Long board;
 
-  public BitBoard(long board) {
+  private BitBoard(long board) {
     this.board = board;
   }
 
@@ -43,6 +45,20 @@ public class BitBoard {
     return new BitBoard(this.board | that);
   }
 
+  public boolean isEmpty() {
+    return this.equals(empty());
+  }
+
+  public boolean isNotEmpty() {
+    return !isEmpty();
+  }
+
+  /**
+   * create a bitboard from an array of `long` values
+   *
+   * @param boards an array of bitboards in `long` form
+   * @return a BitBoard with all values from the input array
+   */
   public static BitBoard from(long... boards) {
     // using boring old for loop for real speed
     long result = 0L;
@@ -52,6 +68,12 @@ public class BitBoard {
     return new BitBoard(result);
   }
 
+  /**
+   * create a bitboard from an array of other BitBoards values
+   *
+   * @param boards an array of bitboards
+   * @return a BitBoard with all values from the input array
+   */
   public static BitBoard from(BitBoard... boards) {
     // using boring old for loop for real speed
     BitBoard result = BitBoard.empty();
@@ -73,6 +95,14 @@ public class BitBoard {
     return new BitBoard(~this.board);
   }
 
+  public BitBoard leftShift(int distance) {
+    return distance >= 0 ? new BitBoard(this.board << distance) : rightShift(-distance);
+  }
+
+  public BitBoard rightShift(int distance) {
+    return distance >= 0 ? new BitBoard(this.board >>> distance) : leftShift(-distance);
+  }
+
   public int getLastPosition() {
     return Long.numberOfTrailingZeros(board);
   }
@@ -90,6 +120,11 @@ public class BitBoard {
   // static methods
   public static BitBoard fromPosition(int i) {
     return BitBoard.empty().addBitAtIndex(i);
+  }
+
+  public static BitBoard fromPosition(String s) {
+    var index = Arrays.asList(SQUARE_MAP).indexOf(s);
+    return index == -1 ? BitBoard.empty() : BitBoard.fromPosition(index);
   }
 
   public static BitBoard parse(String bitBoard) {

@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.Objects;
 import com.tom.exception.InvalidFenException;
 import lombok.Getter;
+import org.apache.commons.lang3.StringUtils;
 
 @Getter
 public class Fen {
@@ -20,30 +21,30 @@ public class Fen {
   private final String fenString;
   private final int[] squares;
   private final int friendlyColour;
-  private final String enPassantMove;
+  private final String enPassantTarget;
   private final boolean[] castlingRights;
 
-  private Fen(String fenString, int[] squares, int friendlyColour, String enPassantMove, boolean[] castlingRights) {
+  private Fen(String fenString, int[] squares, int friendlyColour, String enPassantTarget, boolean[] castlingRights) {
     this.fenString = fenString;
     this.squares = squares;
     this.friendlyColour = friendlyColour;
-    this.enPassantMove = enPassantMove;
+    this.enPassantTarget = enPassantTarget;
     this.castlingRights = castlingRights;
   }
 
-  public Fen(int[] squares, int friendlyColour, String enPassantMove, boolean[] castlingRights) {
+  public Fen(int[] squares, int friendlyColour, String enPassantTarget, boolean[] castlingRights) {
     this.squares = squares;
     this.friendlyColour = friendlyColour;
-    this.enPassantMove = enPassantMove;
+    this.enPassantTarget = enPassantTarget;
     this.castlingRights = castlingRights;
 
     try {
       var newSquaresString = getFenStringFromSquares(squares);
       var newFriendlyColour = isWhite(friendlyColour) ? "w" : "b";
-      var newEnPassantMove = StringUtil.isNotEmpty(enPassantMove) ? enPassantMove : "-";
+      var newEnPassantTarget = StringUtils.isNotBlank(enPassantTarget) ? enPassantTarget : "-";
       var newCastlingRightsString = getCastlingRightsStringFromBooleanArray(castlingRights);
 
-      this.fenString = String.join(" ", newSquaresString, newFriendlyColour, newCastlingRightsString, newEnPassantMove);
+      this.fenString = String.join(" ", newSquaresString, newFriendlyColour, newCastlingRightsString, newEnPassantTarget);
     } catch (Exception e) {
       throw new InvalidFenException(e);
     }
@@ -54,9 +55,9 @@ public class Fen {
       var fenBoardString = getFenBoardString(fenString);
       var squares = getSquaresFromString(fenBoardString);
       var friendlyColour = getColourToPlayFromString(fenString);
-      var enPassantMove = getEnPassantTargetFromString(fenString);
+      var enPassantTarget = getEnPassantTargetFromString(fenString);
       var castlingRights = getCastlingRightsFromString(fenString);
-      return new Fen(fenString, squares, friendlyColour, enPassantMove, castlingRights);
+      return new Fen(fenString, squares, friendlyColour, enPassantTarget, castlingRights);
     } catch (Exception e) {
       throw new InvalidFenException(e);
     }

@@ -14,11 +14,11 @@ class PrecomputedMoveDataTest {
     var actual = PrecomputedMoveData.calculateLegalMoves(startSquare, blockerBitboard, PrecomputedMoveData.ROOK_DIRECTIONS);
 
     System.out.println("Blockers:");
-    new BitBoard(blockerBitboard).print();
+    BitBoard.from(blockerBitboard).print();
     System.out.println("Expected:");
-    new BitBoard(expected).print();
+    BitBoard.from(expected).print();
     System.out.println("Actual:");
-    new BitBoard(actual).print();
+    BitBoard.from(actual).print();
 
     assertEquals(expected, actual);
   }
@@ -31,11 +31,11 @@ class PrecomputedMoveDataTest {
     var actual = PrecomputedMoveData.calculateLegalMoves(startSquare, blockerBitboard, PrecomputedMoveData.ROOK_DIRECTIONS);
 
     System.out.println("Blockers:");
-    new BitBoard(blockerBitboard).print();
+    BitBoard.from(blockerBitboard).print();
     System.out.println("Expected:");
-    new BitBoard(expected).print();
+    BitBoard.from(expected).print();
     System.out.println("Actual:");
-    new BitBoard(actual).print();
+    BitBoard.from(actual).print();
 
     assertEquals(expected, actual);
   }
@@ -48,11 +48,11 @@ class PrecomputedMoveDataTest {
     var actual = PrecomputedMoveData.calculateLegalMoves(startSquare, blockerBitboard, PrecomputedMoveData.ROOK_DIRECTIONS);
 
     System.out.println("Blockers:");
-    new BitBoard(blockerBitboard).print();
+    BitBoard.from(blockerBitboard).print();
     System.out.println("Expected:");
-    new BitBoard(expected).print();
+    BitBoard.from(expected).print();
     System.out.println("Actual:");
-    new BitBoard(actual).print();
+    BitBoard.from(actual).print();
 
     assertEquals(expected, actual);
   }
@@ -65,11 +65,11 @@ class PrecomputedMoveDataTest {
     var actual = PrecomputedMoveData.calculateLegalMoves(startSquare, blockerBitboard, PrecomputedMoveData.ROOK_DIRECTIONS);
 
     System.out.println("Blockers:");
-    new BitBoard(blockerBitboard).print();
+    BitBoard.from(blockerBitboard).print();
     System.out.println("Expected:");
-    new BitBoard(expected).print();
+    BitBoard.from(expected).print();
     System.out.println("Actual:");
-    new BitBoard(actual).print();
+    BitBoard.from(actual).print();
 
     assertEquals(expected, actual);
   }

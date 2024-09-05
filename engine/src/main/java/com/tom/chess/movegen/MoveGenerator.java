@@ -30,8 +30,12 @@ public class MoveGenerator {
   }
 
   public Moves generateMoves(GameState gameState) {
-    threatMapGenerator.generateThreatMapAndChecks(gameState);
     //    var startTime = System.nanoTime();
+    gameState = threatMapGenerator.generateThreatMapAndChecks(gameState);
+
+//    gameState.getThreatMap().print();
+//    gameState.getPinMask().print();
+
     var moves = getMoves(gameState);
 
     //    var endTime = System.nanoTime();
@@ -42,18 +46,19 @@ public class MoveGenerator {
   }
 
   private Moves getMoves(GameState gameState) {
-    Moves moves = new Moves();
+    Moves moves = Moves.empty();
     moves.addAll(getPawnMoves(gameState));
     moves.addAll(getKnightMoves(gameState));
     moves.addAll(getBishopMoves(gameState));
     moves.addAll(getRookMoves(gameState));
     moves.addAll(getQueenMoves(gameState));
     moves.addAll(getKingMoves(gameState));
+    moves.addAll(getEnPassantMoves(gameState));
     return moves;
   }
 
   private Moves getPawnMoves(GameState gameState) {
-    Moves moves = new Moves();
+    var moves = Moves.empty();
     var empty = gameState.getBitboards().getEmpty();
     BitBoard opponentPieces;
     BitBoard friendlyPawns;
@@ -97,7 +102,7 @@ public class MoveGenerator {
   }
 
   private Moves getKnightMoves(GameState gameState) {
-    Moves moves = new Moves();
+    Moves moves = Moves.empty();
 
     BitBoard knights = switch (gameState.getFriendlyColour()) {
       case WHITE -> gameState.getBitboards().getWhiteKnights();
@@ -114,7 +119,7 @@ public class MoveGenerator {
   }
 
   private Moves getBishopMoves(GameState gameState) {
-    Moves moves = new Moves();
+    Moves moves = Moves.empty();
 
     BitBoard bishops = switch (gameState.getFriendlyColour()) {
       case WHITE -> gameState.getBitboards().getWhiteBishops();
@@ -137,7 +142,7 @@ public class MoveGenerator {
   }
 
   private Moves getRookMoves(GameState gameState) {
-    Moves moves = new Moves();
+    Moves moves = Moves.empty();
 
     BitBoard rooks = switch (gameState.getFriendlyColour()) {
       case WHITE -> gameState.getBitboards().getWhiteRooks();
@@ -160,7 +165,7 @@ public class MoveGenerator {
   }
 
   private Moves getQueenMoves(GameState gameState) {
-    Moves moves = new Moves();
+    Moves moves = Moves.empty();
 
     BitBoard queens = switch (gameState.getFriendlyColour()) {
       case WHITE -> gameState.getBitboards().getWhiteQueens();
@@ -192,5 +197,20 @@ public class MoveGenerator {
     legalTargets = legalTargets.and(gameState.getPinMask());
 
     return Moves.from(kingPosition, legalTargets);
+  }
+
+  private Moves getEnPassantMoves(GameState gameState) {
+    if (!gameState.getFen().getEnPassantTarget().equals("-")) {
+      var enPassantTarget = BitBoard.fromPosition(gameState.getFen().getEnPassantTarget());
+      var direction = gameState.getFriendlyColour() == WHITE ? -1 : 1;
+      var friendlyPawns = gameState.getFriendlyColour() == WHITE ? gameState.getBitboards().getWhitePawns() : gameState.getBitboards().getBlackPawns();
+      var possibleStartPositions = enPassantTarget.leftShift(direction * 7).or(enPassantTarget.leftShift(direction * 9));
+      var actualStartPositions = possibleStartPositions.and(friendlyPawns);
+
+      if (actualStartPositions.isNotEmpty()) {
+        return Moves.from(actualStartPositions, enPassantTarget);
+      }
+    }
+    return Moves.empty();
   }
 }

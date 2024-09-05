@@ -14,6 +14,7 @@ import static java.lang.Math.floor;
 import com.tom.chess.piece.PieceUtil;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import lombok.Data;
 
 @Data
@@ -40,6 +41,19 @@ public class GameState {
     this.checkingPieces = BitBoard.empty();
   }
 
+  public GameState(GameState gameState, BitBoard threatMap, BitBoard pinMask) {
+    this.fen = gameState.getFen();
+    this.bitboards = gameState.getBitboards();
+    this.friendlyKingPosition = gameState.getFriendlyKingPosition();
+
+    this.threatMap = threatMap;
+    this.pinMask = pinMask;
+    this.check = gameState.isCheck();
+    // todo: following to may not be needed... to review
+    this.checkingPieceTypes = gameState.getCheckingPieceTypes();
+    this.checkingPieces = gameState.getCheckingPieces();
+  }
+
   public GameState move(Move move) {
     int startPos = move.getStartSquare();
     int targetPos = move.getTargetSquare();
@@ -51,7 +65,7 @@ public class GameState {
     var pieceToMove = fen.getSquares()[startPos];
     var takenPiece = fen.getSquares()[targetPos];
     var newCastlingRights = fen.getCastlingRights().clone();
-    var newEnPassantMoves = fen.getEnPassantMove();
+    var newEnPassantMoves = fen.getEnPassantTarget();
     var newSquares = fen.getSquares().clone();
 
 
@@ -165,7 +179,7 @@ public class GameState {
 
     var newCastlingRights = getNewCastlingRights();
     var newFriendlyColour = PieceUtil.getOppositeColour(fen.getFriendlyColour());
-    var newFen = new Fen(newSquares, newFriendlyColour, fen.getEnPassantMove(), newCastlingRights);
+    var newFen = new Fen(newSquares, newFriendlyColour, fen.getEnPassantTarget(), newCastlingRights);
     return new GameState(newFen);
   }
 
@@ -174,21 +188,20 @@ public class GameState {
     int targetPos = move.getTargetSquare();
     int startRank = (int) (floor(startPos / 8f) + 1);
 
-    if (PieceUtil.isWhite(fen.getFriendlyColour()) && startRank != 2) {
-      return null;
-    }
-    if (PieceUtil.isBlack(fen.getFriendlyColour()) && startRank != 7) {
-      return null;
-    }
-    int targetFile = targetPos % 8 + 1;
+    var result = "-";
 
+    if ((PieceUtil.isWhite(fen.getFriendlyColour()) && startRank != 2) || (PieceUtil.isBlack(fen.getFriendlyColour()) && startRank != 7)) {
+      return result;
+    }
+
+    int targetFile = targetPos % 8 + 1;
     if (PieceUtil.isWhite(fen.getFriendlyColour()) && targetRank == 4) {
-      return generateEnPassantMoves(targetPos, targetFile, BLACK);
+      result = generateEnPassantMoves(targetPos, targetFile, BLACK);
     }
     if (PieceUtil.isBlack(fen.getFriendlyColour()) && targetRank == 5) {
-      return generateEnPassantMoves(targetPos, targetFile, WHITE);
+      result = generateEnPassantMoves(targetPos, targetFile, WHITE);
     }
-    return null;
+    return Objects.isNull(result) ? "-" : result;
   }
 
   private String generateEnPassantMoves(int targetPos, int targetFile, int opponentColour) {
@@ -272,7 +285,7 @@ public class GameState {
     return switch (fen.getFriendlyColour()) {
       case WHITE -> bitboards.getWhitePieces();
       case BLACK -> bitboards.getBlackPieces();
-      default -> throw new IllegalStateException("Unexpected value: %s".formatted(fen.getFriendlyColour()));
+      default -> throw new IllegalStateException("Unexpected value: %s" .formatted(fen.getFriendlyColour()));
     };
   }
 
